@@ -24,6 +24,26 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // await client.connect();
+
+    // DB and Collections
+    const posts = client.db("posts");
+    const postCollection = posts.collection("postCollection");
+
+    // posts
+    // Upload a post
+    app.post('/posts', async(req, res)=> {
+        const postsData = req.body;
+        const result = await postCollection.insertOne(postsData);
+        res.send(result)
+    })
+
+    // get all posts
+    app.get('/posts', async(req, res)=> {
+        const postsData =  postCollection.find();
+        const result = await postsData.toArray();
+        res.send(result);
+    })
+
     console.log("Successfully connected to MongoDB");
   } finally {
 
