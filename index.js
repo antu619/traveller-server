@@ -2,11 +2,14 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+var jwt = require("jsonwebtoken");
 const app = express();
 const port = 5000;
 
 app.use(cors());
 app.use(express.json());
+
+
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster1.cueijln.mongodb.net/?retryWrites=true&w=majority&appName=Cluster1`;
 
@@ -30,6 +33,20 @@ async function run() {
     const userCollection = users.collection("userCollection");
     const subscriberCollection = subscribers.collection("subscriberCollection");
 
+    // jwt
+    app.get("/jwt", async (req, res) => {
+      const email = req.query.email;
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      if (user) {
+        const token = jwt.sign({ email }, process.env.ACCESS_TOKEN_SECRET, {
+          expiresIn: "1h",
+        })
+        return res.send({accessToken: token});
+      }
+      res.status(403).send({ accessToken: "" });
+    });
+
     // handle posts
     // Upload a post
     app.post("/posts", async (req, res) => {
@@ -40,6 +57,7 @@ async function run() {
 
     // get all posts
     app.get("/posts", async (req, res) => {
+      console.log('token',req.headers.authorization)
       const postsData = postCollection.find();
       const result = await postsData.toArray();
       res.send(result.reverse());
@@ -83,7 +101,10 @@ async function run() {
       const user = req.body;
       const isExist = await userCollection.findOne({ email: user?.email });
       if (isExist?._id) {
-        return res.send("User data already in DB");
+        return res.send({
+          status: "success",
+          message: "login success",
+        });
       }
       const result = await userCollection.insertOne(user);
       res.send(result);
