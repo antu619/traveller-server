@@ -25,8 +25,10 @@ async function run() {
     // DB and Collections
     const posts = client.db("posts");
     const users = client.db("users");
+    const subscribers = client.db("subscribers");
     const postCollection = posts.collection("postCollection");
     const userCollection = users.collection("userCollection");
+    const subscriberCollection = subscribers.collection("subscriberCollection");
 
     // handle posts
     // Upload a post
@@ -69,12 +71,19 @@ async function run() {
     });
 
     // Handle Users
+    // get all users
+    app.get("/users", async (req, res) => {
+      const users = userCollection.find();
+      const result = await users.toArray();
+      res.send(result);
+    });
+
     // Add user
     app.post("/user", async (req, res) => {
       const user = req.body;
-      const isExist = await userCollection.findOne({email: user?.email})
-      if(isExist?._id){
-        return res.send("User data already in DB")
+      const isExist = await userCollection.findOne({ email: user?.email });
+      if (isExist?._id) {
+        return res.send("User data already in DB");
       }
       const result = await userCollection.insertOne(user);
       res.send(result);
@@ -94,7 +103,6 @@ async function run() {
       res.send(result);
     });
 
-
     // update user info
     app.patch("/users/:email", async (req, res) => {
       const email = req.params.email;
@@ -106,6 +114,13 @@ async function run() {
         },
         { upsert: true }
       );
+      res.send(result);
+    });
+
+    // Subscribe
+    app.post("/subscribers", async (req, res) => {
+      const subscribe = req.body;
+      const result = await subscriberCollection.insertOne(subscribe);
       res.send(result);
     });
 
