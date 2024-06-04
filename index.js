@@ -21,6 +21,26 @@ const client = new MongoClient(uri, {
   },
 });
 
+// VerifyJWT
+function verifyJWT(req, res, next){
+  const authHeader = req.headers.authorization;
+  if(!authHeader){
+    return res.status(401).send('unauthorized access')
+  }
+
+  const token = authHeader.split(' ')[1];
+  console.log(authHeader.split(' ')[1])
+
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function(error, decoded){
+    if(error){
+      return res.status(403).send({message: 'forbidden access'})
+    }
+    req.decoded = decoded;
+    next();
+  })
+
+}
+
 async function run() {
   try {
     // await client.connect();
@@ -49,7 +69,7 @@ async function run() {
 
     // handle posts
     // Upload a post
-    app.post("/posts", async (req, res) => {
+    app.post("/posts", verifyJWT, async (req, res) => {
       const postsData = req.body;
       const result = await postCollection.insertOne(postsData);
       res.send(result);
@@ -57,21 +77,27 @@ async function run() {
 
     // get all posts
     app.get("/posts", async (req, res) => {
-      console.log('token',req.headers.authorization)
+      const postsData = postCollection.find();
+      const result = await postsData.toArray();
+      res.send(result.reverse());
+    });
+
+    // get all posts
+    app.get("/my-posts", verifyJWT, async (req, res) => {
       const postsData = postCollection.find();
       const result = await postsData.toArray();
       res.send(result.reverse());
     });
 
     // get single post
-    app.get("/posts/:id", async (req, res) => {
+    app.get("/posts/:id", verifyJWT, async (req, res) => {
       const id = req.params.id;
       const postsData = await postCollection.findOne({ _id: new ObjectId(id) });
       res.send(postsData);
     });
 
     // update a post
-    app.patch("/posts/:id", async (req, res) => {
+    app.patch("/posts/:id", verifyJWT, async (req, res) => {
       const id = req.params.id;
       const updatedDoc = req.body;
       const postsData = await postCollection.updateOne(
@@ -111,21 +137,21 @@ async function run() {
     });
 
     // get single user
-    app.get("/users/:email", async (req, res) => {
+    app.get("/users/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
       const result = await userCollection.findOne({ email });
       res.send(result);
     });
 
     // get single user
-    app.get("/user/profile/:id", async (req, res) => {
+    app.get("/user/profile/:id", verifyJWT, async (req, res) => {
       const id = req.params.id;
       const result = await userCollection.findOne({ _id: new ObjectId(id) });
       res.send(result);
     });
 
     // update user info
-    app.patch("/users/:email", async (req, res) => {
+    app.patch("/users/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
       const updateDoc = req.body;
       const result = await userCollection.updateOne(
