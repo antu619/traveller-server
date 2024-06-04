@@ -80,6 +80,35 @@ async function run() {
       res.send(result);
     });
 
+    // get single user
+    app.get("/users/:email", async (req, res) => {
+      const email = req.params.email;
+      const result = await userCollection.findOne({ email });
+      res.send(result);
+    });
+
+    // get single user
+    app.get("/user/profile/:id", async (req, res) => {
+      const id = req.params.id;
+      const result = await userCollection.findOne({ _id: new ObjectId(id) });
+      res.send(result);
+    });
+
+
+    // update user info
+    app.patch("/users/:email", async (req, res) => {
+      const email = req.params.email;
+      const updateDoc = req.body;
+      const result = await userCollection.updateOne(
+        { email },
+        {
+          $set: updateDoc,
+        },
+        { upsert: true }
+      );
+      res.send(result);
+    });
+
     console.log("Successfully connected to MongoDB");
   } finally {
   }
