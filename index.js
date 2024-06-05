@@ -171,6 +171,13 @@ async function run() {
       res.send(result);
     });
 
+    // get all subscribers
+    app.get("/subscribers", async (req, res) => {
+      const subscribers = subscriberCollection.find();
+      const result = await subscribers.toArray();
+      res.send(result);
+    });
+
     console.log("Successfully connected to MongoDB");
   } finally {
   }
