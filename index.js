@@ -60,7 +60,7 @@ async function run() {
       const user = await userCollection.findOne(query);
       if (user) {
         const token = jwt.sign({ email }, process.env.ACCESS_TOKEN_SECRET, {
-          expiresIn: "7d",
+          expiresIn: '7d',
         })
         return res.send({accessToken: token});
       }
@@ -108,7 +108,7 @@ async function run() {
     });
 
     // delete a post
-    app.delete("/posts/:id", async (req, res) => {
+    app.delete("/posts/:id", verifyJWT, async (req, res) => {
       const id = req.params.id;
       const result = await postCollection.deleteOne({ _id: new ObjectId(id) });
       res.send(result);
@@ -116,7 +116,7 @@ async function run() {
 
     // Handle Users
     // get all users
-    app.get("/users", async (req, res) => {
+    app.get("/users", verifyJWT, async (req, res) => {
       const users = userCollection.find();
       const result = await users.toArray();
       res.send(result);
@@ -165,14 +165,14 @@ async function run() {
     });
 
     // Subscribe
-    app.post("/subscribers", async (req, res) => {
+    app.post("/subscribers", verifyJWT, async (req, res) => {
       const subscribe = req.body;
       const result = await subscriberCollection.insertOne(subscribe);
       res.send(result);
     });
 
     // get all subscribers
-    app.get("/subscribers", async (req, res) => {
+    app.get("/subscribers", verifyJWT, async (req, res) => {
       const subscribers = subscriberCollection.find();
       const result = await subscribers.toArray();
       res.send(result);
